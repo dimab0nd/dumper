@@ -28,6 +28,9 @@ go.work.sum
 # env file
 .env
 
+# Local binary
+/dumper
+
 # Editor/IDE
 # .idea/
 # .vscode/

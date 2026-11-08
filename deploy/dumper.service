@@ -1,0 +1,11 @@
+[Unit]
+Description=Dump Postgres databases to S3
+After=docker.service
+Wants=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/dumper backup -config /etc/dumper/config.yaml
+
+[Install]
+WantedBy=multi-user.target
