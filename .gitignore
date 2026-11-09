@@ -30,6 +30,7 @@ go.work.sum
 
 # Local binary
 /dumper
+/dist/
 
 # Editor/IDE
 # .idea/

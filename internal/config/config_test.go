@@ -8,7 +8,7 @@ import (
 )
 
 func TestLoadExample(t *testing.T) {
-	cfg, err := Load(filepath.Join("..", "..", "config.example.yaml"))
+	cfg, err := Load(filepath.Join("..", "..", "deploy", "config.example.yaml"))
 	if err != nil {
 		t.Fatal(err)
 	}

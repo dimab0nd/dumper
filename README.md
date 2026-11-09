@@ -19,27 +19,32 @@
 Нужен Go 1.24 или новее.
 
 ```sh
-CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -o dumper ./cmd/dumper
+make build
 ```
 
-Для ARM-сервера замените `amd64` на `arm64`.
+Бинарник собирается в `dist/dumper` для Linux amd64. Для ARM-сервера: `make build ARCH=arm64`.
 
 ## Установка
 
+На сервере, рядом со собранным бинарником:
+
 ```sh
-sudo install -m 0755 dumper /usr/local/bin/dumper
-sudo install -d -m 0700 /etc/dumper
-sudo install -d -m 0700 /var/lib/dumper
-sudo install -m 0600 config.example.yaml /etc/dumper/config.yaml
-sudo install -m 0644 deploy/dumper.service deploy/dumper.timer /etc/systemd/system/
+sudo ./dumper install
 ```
+
+С машины, где лежит репозиторий, то же самое на удалённый хост:
+
+```sh
+make deploy HOST=user@host
+```
+
+Команда копирует бинарник в `/usr/local/bin/dumper`, создаёт `/etc/dumper` и `/var/lib/dumper`, кладёт unit-файлы systemd и выполняет `systemctl daemon-reload`. Пример конфига записывается в `/etc/dumper/config.yaml` только если этого файла ещё нет. Повторный запуск обновляет бинарник и unit-файлы. Таймер команда не включает.
 
 Отредактируйте `/etc/dumper/config.yaml`, затем:
 
 ```sh
-sudo systemctl daemon-reload
-sudo systemctl enable --now dumper.timer
 sudo dumper check -config /etc/dumper/config.yaml
+sudo systemctl enable --now dumper.timer
 sudo systemctl start dumper.service
 journalctl -u dumper.service
 ```
@@ -50,7 +55,7 @@ Timer по умолчанию запускает дамп каждый день 
 
 ## Конфигурация
 
-Пример лежит в `config.example.yaml`.
+Пример лежит в `deploy/config.example.yaml`.
 
 | Поле | Смысл |
 | --- | --- |
@@ -120,12 +125,13 @@ pg_restore --clean --if-exists -d myapp myapp.dump
 ```text
 dumper backup [-config /etc/dumper/config.yaml] [-only myapp]
 dumper check [-config /etc/dumper/config.yaml]
+dumper install
 ```
 
-`backup` снимает дампы и заливает их. `-only` ограничивается одной целью. `check` читает конфиг, проверяет, что контейнеры запущены, и делает `HeadBucket`.
+`backup` снимает дампы и заливает их. `-only` ограничивается одной целью. `check` читает конфиг, проверяет, что контейнеры запущены, и делает `HeadBucket`. `install` копирует бинарник, пример конфига и unit-файлы systemd, затем выполняет `systemctl daemon-reload`. Существующий конфиг не перезаписывается. Таймер не включается.
 
 ## Разработка
 
 ```sh
-go test ./...
+make test
 ```

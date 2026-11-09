@@ -15,6 +15,7 @@ import (
 	"github.com/dimab0nd/dumper/internal/backup"
 	"github.com/dimab0nd/dumper/internal/config"
 	"github.com/dimab0nd/dumper/internal/docker"
+	"github.com/dimab0nd/dumper/internal/install"
 	"github.com/dimab0nd/dumper/internal/store"
 )
 
@@ -33,6 +34,8 @@ func main() {
 		os.Exit(runBackup(os.Args[2:]))
 	case "check":
 		os.Exit(runCheck(os.Args[2:]))
+	case "install":
+		os.Exit(runInstall(os.Args[2:]))
 	case "-h", "--help", "help":
 		usage()
 	default:
@@ -46,10 +49,12 @@ func usage() {
 	fmt.Fprintf(os.Stderr, `Usage:
   dumper backup [-config path] [-only name]
   dumper check [-config path]
+  dumper install
 
 Commands:
-  backup  dump configured databases and upload them to S3
-  check   verify the config, running containers, and bucket access
+  backup   dump configured databases and upload them to S3
+  check    verify the config, running containers, and bucket access
+  install  install the binary, example config, and systemd units
 `)
 }
 
@@ -75,6 +80,30 @@ func runBackup(args []string) int {
 	return execute(*configPath, func(ctx context.Context, cfg *config.Config, rt *docker.Client, st *store.Store) error {
 		return backup.Run(ctx, cfg, rt, st, *only, nil)
 	})
+}
+
+func runInstall(args []string) int {
+	fs := flag.NewFlagSet("install", flag.ContinueOnError)
+	fs.SetOutput(os.Stderr)
+	fs.Usage = func() {
+		fmt.Fprintf(fs.Output(), "Usage: dumper install\n")
+		fs.PrintDefaults()
+	}
+	if err := fs.Parse(args); err != nil {
+		if errors.Is(err, flag.ErrHelp) {
+			return 0
+		}
+		return 2
+	}
+	if fs.NArg() != 0 {
+		fmt.Fprintf(os.Stderr, "unexpected arguments: %s\n", strings.Join(fs.Args(), " "))
+		return 2
+	}
+	if err := install.Install(install.Options{}); err != nil {
+		log.Printf("install: %v", err)
+		return 1
+	}
+	return 0
 }
 
 func runCheck(args []string) int {
