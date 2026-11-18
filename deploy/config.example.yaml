@@ -1,0 +1,26 @@
+s3:
+  endpoint: https://s3.example.com
+  region: us-east-1
+  bucket: backups
+  prefix: vps-1
+  force_path_style: true
+  # access_key_id: ...
+  # secret_access_key: ...
+  # Or set AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY.
+  # retention_days: 14
+  retention_days: 0
+
+dump:
+  tmp_dir: /var/lib/dumper
+
+targets:
+  - name: myapp
+    container: myapp-postgres-1
+    database: myapp
+    user: myapp
+    # password: override; the default is POSTGRES_PASSWORD from the container
+  # Quote the asterisk. It dumps every connectable non-template database.
+  # - name: other
+  #   container: other-postgres-1
+  #   database: "*"
+  #   user: postgres
